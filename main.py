@@ -9,9 +9,10 @@ from handlers.start import start
 from handlers.translate import get_handler as get_tl_handler
 from scheduler import start_scheduler
 from utils import parse_message, parse_unit_message, fetch_rates
+from pathlib import Path
 
 # Load environment variables from .env
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 # Logging config
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
