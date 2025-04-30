@@ -2,19 +2,17 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from PIL import Image
 import pytesseract
-import deepl
 import os
+from google.cloud import translate_v2 as translate
 
-# Manual mapping for language aliases to DeepL codes
+# Manual mapping for language aliases to Google Translate codes
 LANGUAGE_MAP = {
-    'EN': 'EN-US', 'EN-US': 'EN-US', 'EN-GB': 'EN-GB',
-    'JP': 'JA', 'JA': 'JA',
-    'CN': 'ZH', 'ZH': 'ZH',
-    'KR': 'KO', 'KO': 'KO',
-    'ID': 'ID',
-    'FR': 'FR', 'DE': 'DE', 'ES': 'ES', 'IT': 'IT',
-    'NL': 'NL', 'PL': 'PL', 'PT': 'PT-PT', 'RU': 'RU',
-    'UK': 'UK'
+    'EN': 'en', 'EN-US': 'en', 'EN-GB': 'en',
+    'JP': 'ja', 'JA': 'ja',
+    'CN': 'zh', 'ZH': 'zh',
+    'KR': 'ko', 'KO': 'ko',
+    'ID': 'id', 'FR': 'fr', 'DE': 'de', 'ES': 'es', 'IT': 'it',
+    'NL': 'nl', 'PL': 'pl', 'PT': 'pt', 'RU': 'ru', 'UK': 'uk'
 }
 
 # Mapping for user-friendly OCR language inputs to Tesseract language codes
@@ -25,11 +23,11 @@ TESSERACT_LANG_MAP = {
     'CN': 'chi_sim', 'ZH': 'chi_sim',
     'TW': 'chi_tra',
     'ID': 'ind',
-    'DE': 'deu', 'FR': 'fra', 'ES': 'spa', 'IT': 'ita'
+    'DE': 'deu', 'FR': 'fra', 'ES': 'spa', 'IT': 'ita', 'HI': 'hin'
 }
 
 async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    translator = deepl.Translator(os.getenv("DEEPL_API_KEY"))
+    client = translate.Client()
 
     if not update.message.reply_to_message:
         await update.message.reply_text("Please reply to an image with /tlpic <image_lang> <target_lang>")
@@ -39,15 +37,11 @@ async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Usage: /tlpic <image_lang> <target_lang> (e.g. /tlpic jpn en)")
         return
 
-    image_lang_input = context.args[0].upper()
-    image_lang_code = TESSERACT_LANG_MAP.get(image_lang_input, image_lang_input.lower())
+    image_lang_input = context.args[0].strip()
+    image_lang_code = TESSERACT_LANG_MAP.get(image_lang_input.upper(), image_lang_input.lower())
 
-    target_lang_input = context.args[1].upper()
-    target_lang = LANGUAGE_MAP.get(target_lang_input)
-
-    if not target_lang:
-        await update.message.reply_text(f"Unsupported target language: {target_lang_input}")
-        return
+    target_lang_input = context.args[1].strip()
+    target_lang = LANGUAGE_MAP.get(target_lang_input.upper(), target_lang_input.lower())
 
     reply = update.message.reply_to_message
     photo = reply.photo
@@ -66,14 +60,21 @@ async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text("No readable text found in the image.")
                 return
 
-            result = translator.translate_text(text, target_lang=target_lang)
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=result.text,
-                parse_mode="Markdown",
-                message_thread_id=update.message.message_thread_id,
-                reply_to_message_id=update.message.message_id
-            )
+            result = client.translate(text, target_language=target_lang)
+            translated_text = result['translatedText']
+
+            send_kwargs = {
+                "chat_id": update.effective_chat.id,
+                "text": translated_text,
+                "parse_mode": "Markdown",
+                "reply_to_message_id": update.message.message_id
+            }
+
+            # ✅ Use thread ID from the replied-to message (to avoid General-topic error)
+            if hasattr(reply, "message_thread_id") and reply.message_thread_id:
+                send_kwargs["message_thread_id"] = reply.message_thread_id
+
+            await context.bot.send_message(**send_kwargs)
         else:
             await update.message.reply_text("You must reply to an image (photo or image document).")
 

@@ -1,36 +1,34 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-import deepl
-import os
+from google.cloud import translate_v2 as translate
 
-# Manual mapping for language aliases to DeepL codes
+# Manual mapping for language aliases to Google Translate codes
 LANGUAGE_MAP = {
-    'EN': 'EN-US', 'EN-US': 'EN-US', 'EN-GB': 'EN-GB',
-    'JP': 'JA', 'JA': 'JA',
-    'CN': 'ZH', 'ZH': 'ZH',
-    'KR': 'KO', 'KO': 'KO',
-    'ID': 'ID',
-    'FR': 'FR', 'DE': 'DE', 'ES': 'ES', 'IT': 'IT',
-    'NL': 'NL', 'PL': 'PL', 'PT': 'PT-PT', 'RU': 'RU',
-    'UK': 'UK'
+    'EN': 'en', 'EN-US': 'en', 'EN-GB': 'en',
+    'JP': 'ja', 'JA': 'ja',
+    'CN': 'zh', 'ZH': 'zh',
+    'KR': 'ko', 'KO': 'ko',
+    'ID': 'id',
+    'FR': 'fr', 'DE': 'de', 'ES': 'es', 'IT': 'it',
+    'NL': 'nl', 'PL': 'pl', 'PT': 'pt', 'RU': 'ru',
+    'UK': 'uk'
 }
 
 async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    translator = deepl.Translator(os.getenv("DEEPL_API_KEY"))
+    client = translate.Client()
 
     if not update.message.reply_to_message:
         await update.message.reply_text("Please reply to a text message with /tl <LANGCODE>, e.g. /tl EN")
         return
 
+
     # Determine language
     if context.args:
-        lang_input = context.args[0].upper()
-        lang = LANGUAGE_MAP.get(lang_input)
-        if not lang:
-            await update.message.reply_text(f"Unsupported language code: {lang_input}")
-            return
+        lang_input = context.args[0].strip()
+        # Use alias from map if found, otherwise use the raw code (in lowercase)
+        lang = LANGUAGE_MAP.get(lang_input.upper(), lang_input.lower())
     else:
-        lang = 'EN-US'
+        lang = 'en'
 
     reply = update.message.reply_to_message
 
@@ -41,15 +39,24 @@ async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Reply must be a text message.")
             return
 
-        # Translate with DeepL SDK
-        result = translator.translate_text(text, target_lang=lang)
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=result.text,
-            parse_mode="Markdown",
-            message_thread_id=update.message.message_thread_id,
-            reply_to_message_id=update.message.message_id
-        )
+        # Translate with Google Translate API
+        result = client.translate(text, target_language=lang)
+        translated_text = result['translatedText']
+
+        send_kwargs = {
+            "chat_id": update.effective_chat.id,
+            "text": translated_text,
+            "parse_mode": "Markdown",
+            "reply_to_message_id": update.message.message_id
+        }
+
+        # ✅ Use thread ID from the replied-to message (safer than the command)
+        if hasattr(update.message.reply_to_message, "message_thread_id"):
+            thread_id = update.message.reply_to_message.message_thread_id
+            if thread_id is not None:
+                send_kwargs["message_thread_id"] = thread_id
+
+        await context.bot.send_message(**send_kwargs)
 
     except Exception as e:
         await update.message.reply_text("Failed to process translation.")

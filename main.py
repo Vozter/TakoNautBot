@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 import logging
 from telegram import Update
@@ -12,20 +13,24 @@ from scheduler import start_scheduler
 from utils import parse_message, parse_unit_message, fetch_rates
 from pathlib import Path
 
-# Load environment variables from .env
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
-
-# Logging config
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
-
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-if not TOKEN:
-    logger.error("TELEGRAM_BOT_TOKEN missing in environment.")
-    exit(1)
-
 def main():
-    fetch_rates()  # initial fetch on startup
+    # Load environment variables from .env
+    load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
+    # Logging config
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logger = logging.getLogger(__name__)
+
+    # Set the environment variable so google.auth.default() can find credentials
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(Path(__file__).parent / "google_api.json")
+
+    # Telegram token check
+    TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not TOKEN:
+        logger.error("TELEGRAM_BOT_TOKEN missing in environment.")
+        exit(1)
+
+    fetch_rates()  # initial fetch
     start_scheduler()
 
     app = Application.builder().token(TOKEN).build()
