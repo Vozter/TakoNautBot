@@ -6,6 +6,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 from handlers.currency import handle_currency
 from handlers.unit import handle_unit
 from handlers.start import start
+from handlers.translate import get_handler as get_tl_handler
 from scheduler import start_scheduler
 from utils import parse_message, parse_unit_message, fetch_rates
 
@@ -37,6 +38,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, smart_dispatcher))
+    app.add_handler(get_tl_handler())
 
     app.run_polling()
 
