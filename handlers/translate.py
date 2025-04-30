@@ -5,9 +5,6 @@ import pytesseract
 import deepl
 import os
 
-DEEPL_API_KEY = os.getenv("DEEPL_API_KEY")
-translator = deepl.Translator(DEEPL_API_KEY)
-
 # Manual mapping for language aliases to DeepL codes
 LANGUAGE_MAP = {
     'EN': 'EN-US', 'EN-US': 'EN-US', 'EN-GB': 'EN-GB',
@@ -21,6 +18,8 @@ LANGUAGE_MAP = {
 }
 
 async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    translator = deepl.Translator(os.getenv("DEEPL_API_KEY"))
+
     if not update.message.reply_to_message:
         await update.message.reply_text("Please reply to a message or image with /tl <LANGCODE>, e.g. /tl EN")
         return
