@@ -5,7 +5,6 @@ A Telegram bot for currency conversion using Open Exchange Rates API.
 ## Features
 - Fetches and caches exchange rates hourly.
 - Converts currencies based on user input.
-- Formats numbers in Indonesian style.
 
 ## Setup
 1. Clone the repository:
