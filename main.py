@@ -126,7 +126,7 @@ async def convert(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     time_str = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M UTC')
     msg = (
-        f"*{format_idr(amount)} {from_cur}* = *{format_idr(result)} {to_cur}*\n"
+        f"*{format_rate(amount)} {from_cur}* = *{format_rate(result)} {to_cur}*\n"
         f"`1 {from_cur} = {format_rate(rate)} {to_cur}`\n"
         f"_(Rates last updated: {time_str})_"
     )
@@ -139,16 +139,11 @@ async def convert(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_to_message_id=update.message.message_id
     )
 
-
-# === Change number format to Indonesian ===
-def format_idr(value: float) -> str:
-    parts = f"{value:,.2f}".split(".")
-    parts[0] = parts[0].replace(",", ".")
-    return ",".join(parts)
-
 def format_rate(rate: float) -> str:
     if rate >= 1:
-        return format_idr(rate)  # use your normal formatter
+        parts = f"{rate:,.2f}".split(".")
+        parts[0] = parts[0].replace(",", ".")
+        return ",".join(parts)
 
     # Convert to string with high precision, remove trailing zeros
     s = f"{rate:.10f}".rstrip("0")
