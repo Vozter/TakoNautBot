@@ -19,6 +19,7 @@ def webhook():
     # Run pull + restart
     subprocess.run([
         'bash', '-c',
-        'cd /home/vozter/TakoNautBot && git pull origin main && systemctl restart takonaut.service'
+        'cd /home/vozter/TakoNautBot && git pull origin main && sudo systemctl restart takonaut.service'
     ])
+
     return 'OK', 200
