@@ -17,6 +17,17 @@ LANGUAGE_MAP = {
     'UK': 'UK'
 }
 
+# Mapping for user-friendly OCR language inputs to Tesseract language codes
+TESSERACT_LANG_MAP = {
+    'EN': 'eng', 'ENG': 'eng',
+    'JP': 'jpn', 'JA': 'jpn',
+    'KR': 'kor',
+    'CN': 'chi_sim', 'ZH': 'chi_sim',
+    'TW': 'chi_tra',
+    'ID': 'ind',
+    'DE': 'deu', 'FR': 'fra', 'ES': 'spa', 'IT': 'ita'
+}
+
 async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
     translator = deepl.Translator(os.getenv("DEEPL_API_KEY"))
 
@@ -28,7 +39,9 @@ async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Usage: /tlpic <image_lang> <target_lang> (e.g. /tlpic jpn en)")
         return
 
-    image_lang_code = context.args[0].lower()
+    image_lang_input = context.args[0].upper()
+    image_lang_code = TESSERACT_LANG_MAP.get(image_lang_input, image_lang_input.lower())
+
     target_lang_input = context.args[1].upper()
     target_lang = LANGUAGE_MAP.get(target_lang_input)
 
