@@ -22,6 +22,11 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")  # Load from environment variable
 OPEN_EXCHANGE_APP_ID = os.getenv("OPEN_EXCHANGE_APP_ID")  # Load from environment variable
 CACHE_FILE = "usd_rates.json"
 
+# === Environment Variable Validation ===
+if not TOKEN or not OPEN_EXCHANGE_APP_ID:
+    logger.error("Environment variables TELEGRAM_BOT_TOKEN or OPEN_EXCHANGE_APP_ID are missing.")
+    exit(1)
+
 # === Currency Rate Fetcher ===
 def fetch_rates():
     from pathlib import Path
@@ -33,7 +38,7 @@ def fetch_rates():
                 cache = json.load(f)
                 last_time = datetime.fromisoformat(cache["timestamp"])
                 now = datetime.utcnow()
-                
+
                 # If same year, month, day, and hour — skip update
                 if (
                     last_time.year == now.year and
@@ -43,8 +48,10 @@ def fetch_rates():
                 ):
                     logger.info(f"[{datetime.now()}] Rates already fetched this hour. Skipping.")
                     return
+        except json.JSONDecodeError:
+            logger.warning("Cache file is corrupted. Refetching rates.")
         except Exception as e:
-            logger.error("Failed to read cache file, refetching:", exc_info=True)
+            logger.error("Unexpected error reading cache file:", exc_info=True)
 
     # Fetch from API
     try:
@@ -59,9 +66,11 @@ def fetch_rates():
                 }, f)
             logger.info(f"[{datetime.now()}] Exchange rates updated.")
         else:
-            logger.error(f"Failed to fetch rates: {response.text}")
+            logger.error(f"Failed to fetch rates: {response.status_code} - {response.text}")
+    except requests.RequestException as e:
+        logger.error("Network error while fetching rates:", exc_info=True)
     except Exception as e:
-        logger.error("Fetch error:", exc_info=True)
+        logger.error("Unexpected error during fetch:", exc_info=True)
 
 # === Conversion Handler ===
 def parse_message(text):
@@ -73,6 +82,7 @@ def parse_message(text):
         return amount, from_cur, to_cur
     return None
 
+# === Enhanced Logging in convert_currency ===
 def convert_currency(amount, from_cur, to_cur):
     try:
         with open(CACHE_FILE) as f:
@@ -81,11 +91,20 @@ def convert_currency(amount, from_cur, to_cur):
         from_rate = rates.get(from_cur)
         to_rate = rates.get(to_cur)
         if from_rate is None or to_rate is None:
+            logger.warning(f"Currency code not found: {from_cur} or {to_cur}")
             return None, None, None
         result = amount * (to_rate / from_rate)
         rate = to_rate / from_rate
+        logger.info(f"Converted {amount} {from_cur} to {result} {to_cur} at rate {rate}")
         return result, rate, cache["timestamp"]
+    except FileNotFoundError:
+        logger.error("Cache file not found. Please fetch rates first.")
+        return None, None, None
+    except json.JSONDecodeError:
+        logger.error("Cache file is corrupted. Please refetch rates.")
+        return None, None, None
     except Exception as e:
+        logger.error("Unexpected error during conversion:", exc_info=True)
         return None, None, None
 
 async def convert(update: Update, context: ContextTypes.DEFAULT_TYPE):
