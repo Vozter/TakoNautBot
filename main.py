@@ -141,9 +141,7 @@ async def convert(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def format_rate(rate: float) -> str:
     if rate >= 1:
-        parts = f"{rate:,.2f}".split(".")
-        parts[0] = parts[0].replace(",", ".")
-        return ",".join(parts)
+        return f"{rate:,.2f}"
 
     # Convert to string with high precision, remove trailing zeros
     s = f"{rate:.10f}".rstrip("0")
@@ -161,8 +159,7 @@ def format_rate(rate: float) -> str:
     precision = leading_zeros + 2
     formatted = f"{rate:.{precision}f}".rstrip("0").rstrip(".")
 
-    # Convert to Indonesian style
-    return formatted.replace(".", ",")
+    return formatted  # keep dot as decimal
 
 # === Scheduler Setup ===
 def start_scheduler():
