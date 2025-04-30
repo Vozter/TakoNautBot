@@ -116,7 +116,12 @@ async def convert(update: Update, context: ContextTypes.DEFAULT_TYPE):
     result, rate, timestamp = convert_currency(amount, from_cur, to_cur)
 
     if result is None:
-        await update.message.reply_text("Conversion failed. Check currency codes or try again later.")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Conversion failed. Check currency codes or try again later.",
+            message_thread_id=update.message.message_thread_id,
+            reply_to_message_id=update.message.message_id
+        )
         return
 
     time_str = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M UTC')
@@ -125,7 +130,15 @@ async def convert(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"`1 {from_cur} = {format_rate(rate)} {to_cur}`\n"
         f"_(Rates last updated: {time_str})_"
     )
-    await update.message.reply_text(msg, parse_mode="Markdown")
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
+        parse_mode="Markdown",
+        message_thread_id=update.message.message_thread_id,
+        reply_to_message_id=update.message.message_id
+    )
+
 
 # === Change number format to Indonesian ===
 def format_idr(value: float) -> str:
