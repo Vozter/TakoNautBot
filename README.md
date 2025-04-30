@@ -9,7 +9,7 @@ A Telegram bot for currency conversion using Open Exchange Rates API.
 ## Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/TakoNautBot.git
+   git clone https://github.com/fernandolim1/TakoNautBot.git
    cd TakoNautBot
    ```
 
