@@ -1,7 +1,5 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from PIL import Image
-import pytesseract
 import deepl
 import os
 
@@ -21,7 +19,7 @@ async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
     translator = deepl.Translator(os.getenv("DEEPL_API_KEY"))
 
     if not update.message.reply_to_message:
-        await update.message.reply_text("Please reply to a message or image with /tl <LANGCODE>, e.g. /tl EN")
+        await update.message.reply_text("Please reply to a text message with /tl <LANGCODE>, e.g. /tl EN")
         return
 
     # Determine language
@@ -35,32 +33,23 @@ async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lang = 'EN-US'
 
     reply = update.message.reply_to_message
-    photo = reply.photo
-    document = reply.document
 
     try:
-        if photo or (document and document.mime_type.startswith("image/")):
-            # Download image
-            file = (await context.bot.get_file(photo[-1].file_id if photo else document.file_id))
-            img_path = f"temp_{update.message.message_id}.jpg"
-            await file.download_to_drive(img_path)
-
-            # OCR
-            text = pytesseract.image_to_string(Image.open(img_path))
-            os.remove(img_path)
-
-            if not text.strip():
-                await update.message.reply_text("No text found in image.")
-                return
-        elif reply.text:
+        if reply.text:
             text = reply.text
         else:
-            await update.message.reply_text("Unsupported reply type. Reply to a photo or text message.")
+            await update.message.reply_text("Reply must be a text message.")
             return
 
         # Translate with DeepL SDK
         result = translator.translate_text(text, target_lang=lang)
-        await update.message.reply_text(f"{result.text}")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=result.text,
+            parse_mode="Markdown",
+            message_thread_id=update.message.message_thread_id,
+            reply_to_message_id=update.message.message_id
+        )
 
     except Exception as e:
         await update.message.reply_text("Failed to process translation.")
