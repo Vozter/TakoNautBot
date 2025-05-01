@@ -3,8 +3,9 @@ from telegram.ext import ContextTypes, CommandHandler
 from PIL import Image, ImageEnhance
 import pytesseract
 import os
-from google.cloud import translate_v2 as translate
 import html
+from google.cloud.translate_v3 import TranslationServiceClient
+from handlers.ocr_cleaner import clean_ocr_text
 
 # Google Translate language codes (ISO 639-1)
 LANGUAGE_MAP = {
@@ -17,7 +18,7 @@ LANGUAGE_MAP = {
     'HI': 'hi'
 }
 
-# Map from Google Translate codes to Tesseract codes (ISO 639-2 or internal codes)
+# Map from Google Translate codes to Tesseract codes
 GOOGLE_TO_TESSERACT_LANG_MAP = {
     'af': 'afr', 'am': 'amh', 'ar': 'ara', 'az': 'aze', 'be': 'bel',
     'bg': 'bul', 'bn': 'ben', 'ca': 'cat', 'cs': 'ces', 'cy': 'cym',
@@ -34,16 +35,17 @@ GOOGLE_TO_TESSERACT_LANG_MAP = {
     'ur': 'urd', 'vi': 'vie', 'zh': 'chi_sim'
 }
 
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT") or "zeta-verbena-258608"
+LOCATION = "global"
+
 def get_google_lang_code(code: str) -> str:
     return LANGUAGE_MAP.get(code.upper(), code.lower())
 
 def get_tesseract_lang_code(code: str) -> str:
     google_code = get_google_lang_code(code)
-    return GOOGLE_TO_TESSERACT_LANG_MAP.get(google_code, 'eng')  # fallback to eng
+    return GOOGLE_TO_TESSERACT_LANG_MAP.get(google_code, 'eng')
 
 async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    client = translate.Client()
-
     if not update.message.reply_to_message:
         await update.message.reply_text("Please reply to an image with /tlpic <image_lang> <target_lang>")
         return
@@ -54,7 +56,6 @@ async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     image_lang_code = get_tesseract_lang_code(context.args[0])
     target_lang = get_google_lang_code(context.args[1])
-
     reply = update.message.reply_to_message
     photo = reply.photo
     document = reply.document
@@ -66,16 +67,24 @@ async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await file.download_to_drive(img_path)
 
             processed_img = preprocess_image(img_path)
-            text = pytesseract.image_to_string(processed_img, lang=image_lang_code)
-            text = text.replace('|', '').strip()
             os.remove(img_path)
+
+            raw_text = pytesseract.image_to_string(processed_img, lang=image_lang_code, config="--psm 6")
+            text = clean_ocr_text(raw_text.replace("|", "").strip(), image_lang_code)
 
             if not text:
                 await update.message.reply_text("No readable text found in the image.")
                 return
 
-            result = client.translate(text, target_language=target_lang)
-            translated_text = html.unescape(result['translatedText'])
+            client = TranslationServiceClient()
+            parent = f"projects/{PROJECT_ID}/locations/{LOCATION}"
+            response = client.translate_text(
+                contents=[text],
+                target_language_code=target_lang,
+                mime_type="text/plain",
+                parent=parent
+            )
+            translated_text = html.unescape(response.translations[0].translated_text)
 
             send_kwargs = {
                 "chat_id": update.effective_chat.id,
@@ -88,27 +97,27 @@ async def translate_picture(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 send_kwargs["message_thread_id"] = reply.message_thread_id
 
             await context.bot.send_message(**send_kwargs)
+
         else:
             await update.message.reply_text("You must reply to an image (photo or image document).")
 
-    except Exception as e:
+    except Exception:
         await update.message.reply_text("An error occurred while translating the image.")
-        print("Image translation error:", e)
 
 def detect_rotation(img: Image.Image) -> Image.Image:
     try:
         osd = pytesseract.image_to_osd(img)
-        angle = int([line for line in osd.split("\n") if "Rotate" in line][0].split(":")[1].strip())
+        angle = int([line for line in osd.split("\n") if "Rotate" in line][0].split(":")[-1].strip())
         if angle != 0:
-            print(f"Rotating image by {angle} degrees")
-            img = img.rotate(-angle, expand=True)
-    except Exception as e:
-        print(f"Rotation detection failed: {e}")
+            return img.rotate(-angle, expand=True)
+    except:
+        pass
     return img
 
 def preprocess_image(img_path):
     img = Image.open(img_path).convert("L")
-    img = detect_rotation(img)
+    if img.width >= 150 and img.height >= 150:
+        img = detect_rotation(img)
     img = img.resize((1200, int(img.height * (1200 / img.width))))
     img = ImageEnhance.Sharpness(img).enhance(2.5)
     img = img.point(lambda p: 255 if p > 150 else 0)

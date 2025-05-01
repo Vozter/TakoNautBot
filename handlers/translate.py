@@ -1,7 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from google.cloud import translate_v2 as translate
+from google.cloud import translate_v3 as translate
+from google.cloud.translate_v3 import TranslationServiceClient
 import html
+import os
 
 # Manual mapping for language aliases to Google Translate codes
 LANGUAGE_MAP = {
@@ -12,38 +14,39 @@ LANGUAGE_MAP = {
     'ID': 'id',
     'FR': 'fr', 'DE': 'de', 'ES': 'es', 'IT': 'it',
     'NL': 'nl', 'PL': 'pl', 'PT': 'pt', 'RU': 'ru',
-    'UK': 'uk'
+    'UK': 'uk', 'HI': 'hi'
 }
 
-async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    client = translate.Client()
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT") or "zeta-verbena-258608"  # or your actual project ID
+LOCATION = "global"  # NMT default location
 
+async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    client = TranslationServiceClient()
     if not update.message.reply_to_message:
         await update.message.reply_text("Please reply to a text message with /tl <LANGCODE>, e.g. /tl EN")
         return
 
-
-    # Determine language
+    # Determine target language
     if context.args:
         lang_input = context.args[0].strip()
-        # Use alias from map if found, otherwise use the raw code (in lowercase)
-        lang = LANGUAGE_MAP.get(lang_input.upper(), lang_input.lower())
+        target_lang = LANGUAGE_MAP.get(lang_input.upper(), lang_input.lower())
     else:
-        lang = 'en'
+        target_lang = "en"
 
     reply = update.message.reply_to_message
+    if not reply.text:
+        await update.message.reply_text("Reply must be a text message.")
+        return
 
     try:
-        if reply.text:
-            text = reply.text
-        else:
-            await update.message.reply_text("Reply must be a text message.")
-            return
-
-        # Translate with Google Translate API
-        result = client.translate(text, target_language=lang)
-        translated_text = result['translatedText']
-        translated_text = html.unescape(translated_text)
+        parent = f"projects/{PROJECT_ID}/locations/{LOCATION}"
+        response = client.translate_text(
+            contents=[reply.text],
+            target_language_code=target_lang,
+            mime_type="text/plain",
+            parent=parent,
+        )
+        translated_text = html.unescape(response.translations[0].translated_text)
 
         send_kwargs = {
             "chat_id": update.effective_chat.id,
@@ -52,11 +55,8 @@ async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "reply_to_message_id": update.message.message_id
         }
 
-        # ✅ Use thread ID from the replied-to message (safer than the command)
-        if hasattr(update.message.reply_to_message, "message_thread_id"):
-            thread_id = update.message.reply_to_message.message_thread_id
-            if thread_id is not None:
-                send_kwargs["message_thread_id"] = thread_id
+        if hasattr(reply, "message_thread_id") and reply.message_thread_id:
+            send_kwargs["message_thread_id"] = reply.message_thread_id
 
         await context.bot.send_message(**send_kwargs)
 
