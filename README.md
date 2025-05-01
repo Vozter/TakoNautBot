@@ -1,33 +1,100 @@
 # TakoNautBot
 
-A Telegram bot for currency conversion using Open Exchange Rates API.
+![Python](https://img.shields.io/badge/python-3.12+-blue)
+![License](https://img.shields.io/github/license/fernandolim1/TakoNautBot)
 
-## Features
-- Fetches and caches exchange rates hourly.
-- Converts currencies based on user input.
+A multifunctional Telegram bot for currency conversion, unit conversion, and OCR-based image translation.
 
-## Setup
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/fernandolim1/TakoNautBot.git
-   cd TakoNautBot
-   ```
+## ✨ Features
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- 💱 Currency conversion (e.g., `100 USD to IDR`)
+- 📏 Unit conversion (e.g., `170 cm to ft`, `25 c to f`)
+- 📖 OCR + translation from images (e.g., reply to an image with `/tlpic hi en`)
+- 🌐 Text translation via `/tl <LANGCODE>` (e.g., `/tl en`)
+- 🧠 Intelligent routing for messages based on content
+- 📅 Scheduled exchange rate updates (OpenExchangeRates)
+- ✅ Google Translate v3 support with NMT engine
 
-3. Create a `.env` file:
-   ```plaintext
-   TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-   OPEN_EXCHANGE_APP_ID=your-open-exchange-api-key
-   ```
+---
 
-4. Run the bot:
-   ```bash
-   python main.py
-   ```
+## 📦 Setup
 
-## License
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/fernandolim1/TakoNautBot.git
+cd TakoNautBot
+```
+
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Create a `.env` file
+
+```env
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+OPEN_EXCHANGE_APP_ID=your-open-exchange-api-key
+```
+
+### 4. Add your Google Translate v3 credentials
+
+Save your **Google Cloud service account JSON** as:
+
+```
+google_api.json
+```
+
+> Required for text/image translation via Google Translate v3 API.
+
+### 5. Run the bot
+
+```bash
+python main.py
+```
+
+Or use `systemd` for background execution (see `takonaut.service` example).
+
+---
+
+## 💡 Usage
+
+| Command                        | Description                                              |
+|--------------------------------|----------------------------------------------------------|
+| `/start`                       | Show welcome and usage tips                              |
+| `/help`                        | Show welcome and usage tips                              |
+| `/tl <lang>`                   | Translate replied-to text to the target language         |
+| `/tlpic <image_lang> <target>`| OCR + translation from image using given language codes  |
+
+Free-form messages supported:
+
+- `100 USD to JPY`
+- `25 c to f`
+- `3.5 kg to lbs`
+
+---
+
+## ✅ Compatibility
+
+- Python 3.12+
+- Tested on Ubuntu 22.04+
+- Requires Tesseract-OCR installed (with language data for OCR)
+
+---
+
+## 🚧 Work In Progress
+
+- `/tlpic auto <target_lang>` – Auto-detect source language in images
+- Audio translation support
+- PDF translation
+- Inline conversion support (`@TakoNautBot 100 USD to IDR`)
+- User settings (default language/currency)
+- Admin panel for analytics
+
+---
+
+## 🧾 License
+
 [MIT License](LICENSE)
