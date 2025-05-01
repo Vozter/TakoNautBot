@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from google.cloud import translate_v2 as translate
+import html
 
 # Manual mapping for language aliases to Google Translate codes
 LANGUAGE_MAP = {
@@ -42,6 +43,7 @@ async def translate_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Translate with Google Translate API
         result = client.translate(text, target_language=lang)
         translated_text = result['translatedText']
+        translated_text = html.unescape(translated_text)
 
         send_kwargs = {
             "chat_id": update.effective_chat.id,
