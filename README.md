@@ -55,7 +55,46 @@ google_api.json
 python main.py
 ```
 
-Or use `systemd` for background execution (see `takonaut.service` example).
+---
+
+## ⚙️ Running with systemd (Optional)
+
+To run TakoNautBot in the background on a Linux server using `systemd`:
+
+1. Create a file at `/etc/systemd/system/takonaut.service`:
+
+```ini
+[Unit]
+Description=TakoNaut Telegram Bot
+After=network.target
+
+[Service]
+User=yourusername
+WorkingDirectory=/home/yourusername/TakoNautBot
+ExecStart=/usr/bin/python3 main.py
+Restart=on-failure
+Environment=GOOGLE_APPLICATION_CREDENTIALS=/home/yourusername/TakoNautBot/google_api.json
+
+[Install]
+WantedBy=multi-user.target
+```
+
+> Replace `yourusername` and paths with your actual user and directory.
+
+2. Enable and start the service:
+
+```bash
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable takonaut
+sudo systemctl start takonaut
+```
+
+3. To check logs:
+
+```bash
+journalctl -u takonaut -f
+```
 
 ---
 
@@ -79,8 +118,8 @@ Free-form messages supported:
 ## ✅ Compatibility
 
 - Python 3.12+
-- Tested on Ubuntu 22.04+
-- Requires Tesseract-OCR installed (with language data for OCR)
+- Tested on Ubuntu 24.04+
+- Requires Tesseract-OCR installed (with language data for OCR via `sudo apt install tesseract-ocr-all`)
 
 ---
 
