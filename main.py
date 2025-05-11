@@ -12,6 +12,7 @@ from handlers.unit import handle_unit
 from handlers.start import start
 from handlers.translate import get_handler as get_tl_handler
 from handlers.translate_image import get_handler as get_tlpic_handler
+from handlers.translate_audio import get_handler as get_tlvoice_handler
 from scheduler import start_scheduler
 from utils import parse_message, parse_unit_message, fetch_rates
 
@@ -46,6 +47,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, smart_dispatcher))
     app.add_handler(get_tl_handler())
     app.add_handler(get_tlpic_handler())
+    #app.add_handler(get_tlvoice_handler())
 
     app.run_polling()
 
