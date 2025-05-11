@@ -9,3 +9,4 @@ __pycache__/
 # Cache file
 usd_rates.json
 google_api.json
+deploy_hook.py

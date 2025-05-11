@@ -1,21 +1,34 @@
-# TakoNautBot
+# 🐙 TakoNautBot
 
 ![Python](https://img.shields.io/badge/python-3.12+-blue)
 ![License](https://img.shields.io/github/license/fernandolim1/TakoNautBot)
 
 A multifunctional Telegram bot for currency conversion, unit conversion, and OCR-based image translation.
 
+[🤖 Try on Telegram » @TakoNautBot](https://t.me/TakoNautBot)
+
 ## ✨ Features
 
-- 💱 Currency conversion (e.g., `100 USD to IDR`)
-- 📏 Unit conversion (e.g., `170 cm to ft`, `25 c to f`)
-- 📖 OCR + translation from images (e.g., reply to an image with `/tlpic hi en`)
-- 🌐 Text translation via `/tl <LANGCODE>` (e.g., `/tl en`)
-- 🧠 Intelligent routing for messages based on content
-- 📅 Scheduled exchange rate updates (OpenExchangeRates)
-- ✅ Google Translate v3 support with NMT engine
+- 💱 **Currency Conversion**  
+  → `100 USD to IDR`
 
----
+- 📏 **Unit Conversion**  
+  → `170 cm to ft`, `25 c to f`
+
+- 🖼️ **Image Translation (OCR)**  
+  → Reply to image with `/tlpic en id`  
+  → Supports multiple languages
+
+- 🌐 **Text Translation**  
+  → Reply message with `/tl en`
+
+- 📅 **Scheduled Exchange Rate Updates**  
+  → Uses OpenExchangeRates API
+
+- 🔠 **Google Translate v3 (NMT)**  
+  → High-quality translation engine
+
+
 
 ## 📦 Setup
 
@@ -34,9 +47,8 @@ pip install -r requirements.txt
 
 ### 3. Create a `.env` file
 
-```env
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-OPEN_EXCHANGE_APP_ID=your-open-exchange-api-key
+```bash
+cp .env.example .env
 ```
 
 ### 4. Add your Google Translate v3 credentials
@@ -55,7 +67,7 @@ google_api.json
 python main.py
 ```
 
----
+
 
 ## ⚙️ Running with systemd (Optional)
 
@@ -90,19 +102,12 @@ sudo systemctl enable takonaut
 sudo systemctl start takonaut
 ```
 
-3. To check logs:
 
-```bash
-journalctl -u takonaut -f
-```
-
----
 
 ## 💡 Usage
 
 | Command                        | Description                                              |
 |--------------------------------|----------------------------------------------------------|
-| `/start`                       | Show welcome and usage tips                              |
 | `/help`                        | Show welcome and usage tips                              |
 | `/tl <lang>`                   | Translate replied-to text to the target language         |
 | `/tlpic <image_lang> <target>`| OCR + translation from image using given language codes  |
@@ -113,7 +118,7 @@ Free-form messages supported:
 - `25 c to f`
 - `3.5 kg to lbs`
 
----
+
 
 ## ✅ Compatibility
 
@@ -121,7 +126,7 @@ Free-form messages supported:
 - Tested on Ubuntu 24.04+
 - Requires Tesseract-OCR installed (with language data for OCR via `sudo apt install tesseract-ocr-all`)
 
----
+
 
 ## 🚧 Work In Progress
 
@@ -132,8 +137,19 @@ Free-form messages supported:
 - User settings (default language/currency)
 - Admin panel for analytics
 
----
+
+## ☕ Support This Project
+
+If you find this project helpful, consider supporting me:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/O5O61ETJ7G)
+
+
 
 ## 🧾 License
 
 [MIT License](LICENSE)
+
+---
+
+Made with 🐙 and ☕ by [@vozter](https://github.com/vozter)
