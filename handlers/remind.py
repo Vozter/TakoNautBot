@@ -200,7 +200,7 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
         await update.effective_message.reply_text(
             msg,
             reply_markup=InlineKeyboardMarkup([buttons]),
-            parse_mode="Markdown"
+            parse_mode="HTML"
         )
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
