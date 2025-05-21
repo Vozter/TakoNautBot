@@ -28,6 +28,11 @@ A multifunctional Telegram bot for currency conversion, unit conversion, and OCR
 - 🔠 **Google Translate v3 (NMT)**  
   → High-quality translation engine
 
+- ⏰ **Smart Reminders**  
+  → Supports one-time and recurring reminders  
+  → Daily / Weekly / Monthly / Yearly at 00:00 GMT+7  
+  → Includes pagination with inline buttons  
+  → Admin-only in groups
 
 
 ## 📦 Setup
@@ -111,6 +116,14 @@ sudo systemctl start takonaut
 | `/help`                        | Show welcome and usage tips                              |
 | `/tl <lang>`                   | Translate replied-to text to the target language         |
 | `/tlpic <image_lang> <target>`| OCR + translation from image using given language codes  |
+| `/remind <time> <message>`         | Set one-time reminder (e.g. `10m`, `1h30m`, `10mins`, `1hour10mins`) (admin-only in groups)    |
+| `/remind daily <message>`          | Set daily reminder at 00:00 GMT+7 (admin-only in groups)                                 |
+| `/remind weekly <weekday> <msg>`   | Set weekly reminder (e.g. `/remind weekly Monday report`) (admin-only in groups)         |
+| `/remind monthly <day> <message>`  | Set monthly reminder on day of month (e.g `/remind monthly 25 payday`) (admin-only in groups)                              | 
+| `/remind yearly <day> <month> <msg>`| Set yearly reminder on day/month (e.g. `/remind yearly 11 Jan Happy Birthday`) (admin-only in groups)|
+| `/reminder_list`                     | List reminders (paginated with buttons)                            |
+| `/reminder_delete <id>`              | Delete a reminder by ID (admin-only in groups)                     |
+| `/timezone <tz>`                   | Set your personal timezone (e.g. `Asia/Tokyo`) [List of Timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 
 Free-form messages supported:
 
