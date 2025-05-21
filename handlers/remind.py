@@ -177,7 +177,10 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
     for r in chunk:
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
         local = utc_time.astimezone(tz)
-        msg += f"🆔 `{r['id']}` | 🕒 *{local.strftime('%Y-%m-%d %H:%M')}* | 🔁 {r['recurrence']}\n📌 {r['remind_text']}\n\n"
+        msg += (
+            f"🆔 `{r['id']}` | 🕒 *{escape_md(local.strftime('%Y-%m-%d %H:%M'))}* | "
+            f"🔁 {escape_md(r['recurrence'])}\n📌 {escape_md(r['remind_text'])}\n\n"
+        )
 
     buttons = [
         InlineKeyboardButton("⏪", callback_data="remindlist_1"),
@@ -227,6 +230,9 @@ async def remind_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ Reminder `{reminder_id}` deleted.", parse_mode="Markdown")
     else:
         await update.message.reply_text("❌ Reminder not found or doesn't belong to this chat.")
+
+def escape_md(text: str) -> str:
+    return text.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace('`', '\\`').replace('@', '\\@')
 
 def get_handlers():
     return [
