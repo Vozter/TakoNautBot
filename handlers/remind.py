@@ -6,9 +6,6 @@ import pytz
 from datetime import datetime, timedelta
 import re
 import math
-from telegram.helpers import escape_markdown
-
-GLOBAL_ADMINS = [541766689]
 
 WEEKDAYS = {
     "monday": 0, "tuesday": 1, "wednesday": 2,
@@ -51,15 +48,8 @@ def parse_flexible_time(text: str, now: datetime, force_timezone: str = None) ->
         return None
 
 async def is_user_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    user_id = update.effective_user.id
-
-    if user_id in GLOBAL_ADMINS:
-        return True
-
-    if update.effective_chat.type == "private":
-        return True
-
-    member = await context.bot.get_chat_member(update.effective_chat.id, user_id)
+    if update.effective_chat.type == "private": return True
+    member = await context.bot.get_chat_member(update.effective_chat.id, update.effective_user.id)
     return member.status in ["creator", "administrator"]
 
 async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -144,12 +134,9 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     remind_time_utc = remind_time_local.astimezone(pytz.UTC)
     add_reminder(chat_id, user_id, message, remind_time_utc, recurrence)
 
-    time_str = escape_markdown(remind_time_local.strftime('%Y-%m-%d %H:%M'), version=2)
-    rec = escape_markdown(recurrence, version=2)
-
     await update.message.reply_text(
-        f"✅ Reminder set for *{time_str}* \\(Asia/Jakarta\\)\nRecurrence: `{rec}`",
-        parse_mode="MarkdownV2"
+        f"✅ Reminder set for {remind_time_local.strftime('%Y-%m-%d %H:%M')} (Asia/Jakarta)\nRecurrence: `{recurrence}`",
+        parse_mode="Markdown"
     )
 
 async def remind_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -174,22 +161,12 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
 
     offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
     tz_display = f"GMT{'+' if offset >= 0 else ''}{int(offset)}"
-    safe_tz_display = escape_markdown(tz_display, version=2)
-    safe_tz_str = escape_markdown(tz_str, version=2)
-    msg = "*📋 Reminders List*"
-    msg += f"\nTimezone: `{safe_tz_display}` \\({safe_tz_str}\\)\n\n"
+    msg = f"📋 *Reminders List*\nTimezone: `{tz_display}` ({tz_str})\n\n"
 
     for r in chunk:
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
         local = utc_time.astimezone(tz)
-
-        safe_id = escape_markdown(str(r['id']), version=2)
-        safe_time = escape_markdown(local.strftime('%Y-%m-%d %H:%M'), version=2)
-        safe_recurrence = escape_markdown(r['recurrence'], version=2)
-        safe_text = escape_markdown(r['remind_text'], version=2)
-
-        msg += f"🆔 `{safe_id}` | 🕒 *{safe_time}* | 🔁 {safe_recurrence}\n📌 {safe_text}\n\n"
-
+        msg += f"🆔 `{r['id']}` | 🕒 *{local.strftime('%Y-%m-%d %H:%M')}* | 🔁 {r['recurrence']}\n📌 {r['remind_text']}\n\n"
 
     buttons = [
         InlineKeyboardButton("⏪", callback_data="remindlist_1"),
@@ -202,13 +179,13 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
         await update.callback_query.edit_message_text(
             msg,
             reply_markup=InlineKeyboardMarkup([buttons]),
-            parse_mode="MarkdownV2"
+            parse_mode="Markdown"
         )
     else:
         await update.effective_message.reply_text(
             msg,
             reply_markup=InlineKeyboardMarkup([buttons]),
-            parse_mode="MarkdownV2"
+            parse_mode="Markdown"
         )
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -236,7 +213,7 @@ async def remind_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     success = delete_reminder_by_id(reminder_id, chat_id)
 
     if success:
-        await update.message.reply_text(f"✅ Reminder `{reminder_id}` deleted.", parse_mode="MarkdownV2")
+        await update.message.reply_text(f"✅ Reminder `{reminder_id}` deleted.", parse_mode="Markdown")
     else:
         await update.message.reply_text("❌ Reminder not found or doesn't belong to this chat.")
 
