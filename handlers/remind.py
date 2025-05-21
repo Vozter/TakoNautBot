@@ -6,6 +6,7 @@ import pytz
 from datetime import datetime, timedelta
 import re
 import math
+from telegram.helpers import escape_markdown
 
 GLOBAL_ADMINS = [541766689]
 
@@ -145,7 +146,7 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ Reminder set for {remind_time_local.strftime('%Y-%m-%d %H:%M')} (Asia/Jakarta)\nRecurrence: `{recurrence}`",
-        parse_mode="Markdown"
+        parse_mode="MarkdownV2"
     )
 
 async def remind_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -175,7 +176,9 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
     for r in chunk:
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
         local = utc_time.astimezone(tz)
-        msg += f"🆔 `{r['id']}` | 🕒 *{local.strftime('%Y-%m-%d %H:%M')}* | 🔁 {r['recurrence']}\n📌 {r['remind_text']}\n\n"
+        safe_text = escape_markdown(r['remind_text'], version=2)
+        msg += f"🆔 `{r['id']}` | 🕒 *{local.strftime('%Y-%m-%d %H:%M')}* | 🔁 {r['recurrence']}\n📌 {safe_text}\n\n"
+
 
     buttons = [
         InlineKeyboardButton("⏪", callback_data="remindlist_1"),
@@ -188,13 +191,13 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
         await update.callback_query.edit_message_text(
             msg,
             reply_markup=InlineKeyboardMarkup([buttons]),
-            parse_mode="Markdown"
+            parse_mode="MarkdownV2"
         )
     else:
         await update.effective_message.reply_text(
             msg,
             reply_markup=InlineKeyboardMarkup([buttons]),
-            parse_mode="Markdown"
+            parse_mode="MarkdownV2"
         )
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -222,7 +225,7 @@ async def remind_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     success = delete_reminder_by_id(reminder_id, chat_id)
 
     if success:
-        await update.message.reply_text(f"✅ Reminder `{reminder_id}` deleted.", parse_mode="Markdown")
+        await update.message.reply_text(f"✅ Reminder `{reminder_id}` deleted.", parse_mode="MarkdownV2")
     else:
         await update.message.reply_text("❌ Reminder not found or doesn't belong to this chat.")
 
