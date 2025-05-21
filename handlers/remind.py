@@ -144,8 +144,11 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     remind_time_utc = remind_time_local.astimezone(pytz.UTC)
     add_reminder(chat_id, user_id, message, remind_time_utc, recurrence)
 
+    time_str = escape_markdown(remind_time_local.strftime('%Y-%m-%d %H:%M'), version=2)
+    rec = escape_markdown(recurrence, version=2)
+
     await update.message.reply_text(
-        f"✅ Reminder set for {remind_time_local.strftime('%Y-%m-%d %H:%M')} (Asia/Jakarta)\nRecurrence: `{recurrence}`",
+        f"✅ Reminder set for *{time_str}* \\(Asia/Jakarta\\)\nRecurrence: `{rec}`",
         parse_mode="MarkdownV2"
     )
 
@@ -173,7 +176,8 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
     tz_display = f"GMT{'+' if offset >= 0 else ''}{int(offset)}"
     safe_tz_display = escape_markdown(tz_display, version=2)
     safe_tz_str = escape_markdown(tz_str, version=2)
-    msg = f"*📋 Reminders List*\nTimezone: `{safe_tz_display}` \\({safe_tz_str}\\)\n\n"
+    msg = "*📋 Reminders List*"
+    msg += f"\nTimezone: `{safe_tz_display}` \\({safe_tz_str}\\)\n\n"
 
     for r in chunk:
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
