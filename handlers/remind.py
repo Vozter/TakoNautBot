@@ -171,7 +171,9 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
 
     offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
     tz_display = f"GMT{'+' if offset >= 0 else ''}{int(offset)}"
-    msg = f"📋 *Reminders List*\nTimezone: `{tz_display}` ({tz_str})\n\n"
+    safe_tz_display = escape_markdown(tz_display, version=2)
+    safe_tz_str = escape_markdown(tz_str, version=2)
+    msg = f"*📋 Reminders List*\nTimezone: `{safe_tz_display}` \\({safe_tz_str}\\)\n\n"
 
     for r in chunk:
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
