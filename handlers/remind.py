@@ -176,8 +176,13 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
     for r in chunk:
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
         local = utc_time.astimezone(tz)
+
+        safe_id = escape_markdown(str(r['id']), version=2)
+        safe_time = escape_markdown(local.strftime('%Y-%m-%d %H:%M'), version=2)
+        safe_recurrence = escape_markdown(r['recurrence'], version=2)
         safe_text = escape_markdown(r['remind_text'], version=2)
-        msg += f"🆔 `{r['id']}` | 🕒 *{local.strftime('%Y-%m-%d %H:%M')}* | 🔁 {r['recurrence']}\n📌 {safe_text}\n\n"
+
+        msg += f"🆔 `{safe_id}` | 🕒 *{safe_time}* | 🔁 {safe_recurrence}\n📌 {safe_text}\n\n"
 
 
     buttons = [
