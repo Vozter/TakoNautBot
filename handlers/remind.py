@@ -139,7 +139,10 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_tz = pytz.timezone(get_user_timezone(user_id))
         remind_time_local = parse_flexible_time(first, datetime.now(user_tz))
         if not remind_time_local:
-            await update.message.reply_text("❌ Invalid format. Try: `10mins`, `10days`")
+            await update.message.reply_text(
+                f"❌ Invalid format. Try: `10mins`, `10days`",
+                parse_mode="Markdown"
+            )
             return
         message = ' '.join(context.args[1:])
 
@@ -173,7 +176,7 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
 
     offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
     tz_display = f"GMT{'+' if offset >= 0 else ''}{int(offset)}"
-    msg = f"📋 *Reminders List*\nTimezone: `{tz_display}` ({tz_str})\n\n"
+    msg = f"📋 <b>Reminders List</b>\nTimezone: <code>{tz_display}</code> ({tz_str})\n\n"
 
     for r in chunk:
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
