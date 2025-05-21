@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import re
 import math
 
+GLOBAL_ADMINS = [541766689]
+
 WEEKDAYS = {
     "monday": 0, "tuesday": 1, "wednesday": 2,
     "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6
@@ -48,8 +50,15 @@ def parse_flexible_time(text: str, now: datetime, force_timezone: str = None) ->
         return None
 
 async def is_user_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    if update.effective_chat.type == "private": return True
-    member = await context.bot.get_chat_member(update.effective_chat.id, update.effective_user.id)
+    user_id = update.effective_user.id
+
+    if user_id in GLOBAL_ADMINS:
+        return True
+
+    if update.effective_chat.type == "private":
+        return True
+
+    member = await context.bot.get_chat_member(update.effective_chat.id, user_id)
     return member.status in ["creator", "administrator"]
 
 async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
