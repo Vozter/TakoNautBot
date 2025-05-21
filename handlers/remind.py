@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import re
 import math
 from telegram.helpers import escape_markdown
+from html import escape as html_escape
 
 GLOBAL_ADMINS = [541766689]
 
@@ -178,8 +179,8 @@ async def show_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE, pag
         utc_time = r['run_at'].replace(tzinfo=pytz.UTC)
         local = utc_time.astimezone(tz)
         msg += (
-            f"🆔 `{r['id']}` | 🕒 *{escape_md(local.strftime('%Y-%m-%d %H:%M'))}* | "
-            f"🔁 {escape_md(r['recurrence'])}\n📌 {escape_md(r['remind_text'])}\n\n"
+            f"🆔 <code>{r['id']}</code> | 🕒 <b>{local.strftime('%Y-%m-%d %H:%M')}</b> | "
+            f"🔁 {html_escape(r['recurrence'])}\n📌 {html_escape(r['remind_text'])}\n\n"
         )
 
     buttons = [
