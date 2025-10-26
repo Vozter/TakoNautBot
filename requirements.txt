@@ -5,6 +5,7 @@ python-dotenv
 google-cloud-translate
 pillow
 pytesseract
-flaskopenai
+flask
+openai==0.28.1
 pytz
 mysql-connector-python
