@@ -104,8 +104,8 @@ def main():
     app.add_handler(get_timezone_handler())
 
     # Start schedulers
-    asyncio.get_event_loop().create_task(reminder_scheduler(app))
-    asyncio.get_event_loop().create_task(recurring_scheduler(app))
+    #asyncio.get_event_loop().create_task(reminder_scheduler(app))
+    #asyncio.get_event_loop().create_task(recurring_scheduler(app))
 
     app.run_polling()
 

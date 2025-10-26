@@ -5,4 +5,6 @@ python-dotenv
 google-cloud-translate
 pillow
 pytesseract
-flask
+flaskopenai==0.28.1
+pytz
+mysql-connector-python
