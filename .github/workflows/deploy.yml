@@ -23,7 +23,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy on server: pull, install deps, restart service
+      - name: "Deploy on server: pull, install deps, restart service"
         env:
           WORKDIR: ${{ secrets.WORKDIR || '/srv/TakoNautBot' }}
           PYTHON_BIN: ${{ secrets.PYTHON_BIN || '/srv/TakoNautBot/.venv/bin/python' }}
